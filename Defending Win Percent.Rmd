@@ -1,0 +1,45 @@
+---
+title: "IPL"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+matches[matches == "Rising Pune Supergiant"] <- "Rising Pune Supergiants"
+matches
+```
+
+```{r}
+matches1 <- matches %>%
+  mutate(defending_team = case_when(toss_decision == 'bat' ~ toss_winner,
+                                  (toss_decision == 'field') & (toss_winner == team1) ~ team2,
+                                  (toss_decision == 'field') & (toss_winner == team2) ~ team1))
+
+matches1$defending_result <- ifelse(matches1$defending_team == matches1$winner, 'won',
+                                  ifelse(matches1$defending_team != matches1$winner, 'lost', 'NA'))
+matches1
+```
+
+```{r}
+matches2 <- matches1 %>%
+  filter(!is.na(defending_result)) %>%
+  group_by(defending_team) %>%
+  summarise(total_defences = n(),
+            total_wins = sum(defending_result == "won"),
+            win_percent = total_wins/total_defences*100)
+matches2
+```
+
+```{r}
+ggplot(data = matches2, aes(x = defending_team, y = win_percent)) +
+  geom_col(color = 'black', fill = 'light blue') +
+  coord_flip()
+```
+
